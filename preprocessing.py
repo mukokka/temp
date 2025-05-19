@@ -106,8 +106,8 @@ for subdir in subdir_list:
     cnt_mi_eeg, mrk_mi_eeg, clab_eeg = extract_current_data(subject_dir_eeg, fs=fs_eeg)
     cnt_mi_nirs, mrk_mi_nirs, clab_nirs = extract_current_data(subject_dir_nirs,fs=fs_nirs)
 
-    print('shape of eeg', cnt_mi_eeg.shape)
-    print('shape of nirs', cnt_mi_nirs.shape)
+    print('shape of eeg', cnt_mi_eeg.shape)           # (360523, 32) sub01 
+    print('shape of nirs', cnt_mi_nirs.shape)         # (21616, 72)  sub01
 
     ch_names_eeg = [ch[0] if isinstance(ch, np.ndarray) else ch for ch in clab_eeg]
     ch_names_nirs = [ch[0] if isinstance(ch, np.ndarray) else ch for ch in clab_nirs]
@@ -115,12 +115,15 @@ for subdir in subdir_list:
     print('channels of nirs',ch_names_nirs)
     print('channels of eeg',ch_names_eeg)
 
+    #channels of nirs ['AF7Fp1lowWL', 'AF3Fp1lowWL', 'AF3AFzlowWL', 'FpzFp1lowWL', 'FpzAFzlowWL', 'FpzFp2lowWL', 'AF4AFzlowWL', 'AF4Fp2lowWL', 'AF8Fp2lowWL', 'OzPOzlowWL', 'OzO1lowWL', 'OzO2lowWL', 'C5CP5lowWL', 'C5FC5lowWL', 'C5C3lowWL', 'FC3FC5lowWL', 'FC3C3lowWL', 'FC3FC1lowWL', 'CP3CP5lowWL', 'CP3C3lowWL', 'CP3CP1lowWL', 'C1C3lowWL', 'C1FC1lowWL', 'C1CP1lowWL', 'C2FC2lowWL', 'C2CP2lowWL', 'C2C4lowWL', 'FC4FC2lowWL', 'FC4C4lowWL', 'FC4FC6lowWL', 'CP4CP6lowWL', 'CP4CP2lowWL', 'CP4C4lowWL', 'C6CP6lowWL', 'C6C4lowWL', 'C6FC6lowWL', 'AF7Fp1highWL', 'AF3Fp1highWL', 'AF3AFzhighWL', 'FpzFp1highWL', 'FpzAFzhighWL', 'FpzFp2highWL', 'AF4AFzhighWL', 'AF4Fp2highWL', 'AF8Fp2highWL', 'OzPOzhighWL', 'OzO1highWL', 'OzO2highWL', 'C5CP5highWL', 'C5FC5highWL', 'C5C3highWL', 'FC3FC5highWL', 'FC3C3highWL', 'FC3FC1highWL', 'CP3CP5highWL', 'CP3C3highWL', 'CP3CP1highWL', 'C1C3highWL', 'C1FC1highWL', 'C1CP1highWL', 'C2FC2highWL', 'C2CP2highWL', 'C2C4highWL', 'FC4FC2highWL', 'FC4C4highWL', 'FC4FC6highWL', 'CP4CP6highWL', 'CP4CP2highWL', 'CP4C4highWL', 'C6CP6highWL', 'C6C4highWL', 'C6FC6highWL']
+    #channels of eeg ['F7', 'AFF5h', 'F3', 'AFp1', 'AFp2', 'AFF6h', 'F4', 'F8', 'AFF1h', 'AFF2h', 'Cz', 'Pz', 'FCC5h', 'FCC3h', 'CCP5h', 'CCP3h', 'T7', 'P7', 'P3', 'PPO1h', 'POO1', 'POO2', 'PPO2h', 'P4', 'FCC4h', 'FCC6h', 'CCP4h', 'CCP6h', 'P8', 'T8', 'VEOG', 'HEOG']
+
     # preprocessing
     eeg_mi_preprocessed = preprocess_eeg(raw_data=cnt_mi_eeg,ch_names=ch_names_eeg, fs=fs_eeg)
     nirs_mi_preprocessed = preprocess_nirs(raw_data=cnt_mi_nirs,ch_names=ch_names_nirs, fs=fs_nirs)
 
-    print('shape of preprocessed eeg',eeg_mi_preprocessed.get_data().shape)
-    print('shape of preprocessed nirs',nirs_mi_preprocessed.get_data().shape)
+    print('shape of preprocessed eeg',eeg_mi_preprocessed.get_data().shape)        # (32, 360523) sub01 
+    print('shape of preprocessed nirs',nirs_mi_preprocessed.get_data().shape)      # (72, 21616)  sub01
 
     MotorChannel_eeg = ['FCC3h', 'FCC5h', 'CCP3h', 'CCP5h', 'FCC4h', 'FCC6h', 'CCP4h', 'CCP6h']
 
@@ -132,9 +135,9 @@ for subdir in subdir_list:
     hbo_mi_selected = channel_selection(nirs_mi_preprocessed, MotorChannel_nirs_low)
     hbr_mi_selected = channel_selection(nirs_mi_preprocessed, MotorChannel_nirs_low)
 
-    print('shape of selected eeg',eeg_mi_selected.get_data().shape)
-    print('shape of selected hbo',hbo_mi_selected.get_data().shape)
-    print('shape of selected hbr',hbr_mi_selected.get_data().shape)
+    print('shape of selected eeg',eeg_mi_selected.get_data().shape)         # (8, 360523) sub01 
+    print('shape of selected hbo',hbo_mi_selected.get_data().shape)         # (24, 360523) sub01 
+    print('shape of selected hbr',hbr_mi_selected.get_data().shape)         # (24, 360523) sub01 
 
     events_eeg = create_mne_events(mrk_mi_eeg['time'], mrk_mi_eeg['y'], fs=fs_eeg)
     events_nirs = create_mne_events(mrk_mi_nirs['time'], mrk_mi_nirs['y'], fs=fs_nirs)
