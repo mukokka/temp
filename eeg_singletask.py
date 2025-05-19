@@ -24,65 +24,73 @@ class Logger(object):
     def flush(self):
         pass
 
-class CNN_HBR(nn.Module):
+class CNN_EEG(nn.Module):
     def __init__(self):
-        super(CNN_HBR, self).__init__()
+        super(CNN_EEG, self).__init__()
 
         # Block 1
         self.block1 = nn.Sequential(
-            nn.Conv2d(1, 16, kernel_size=(1, 4), stride=1, padding='same'),
+            nn.Conv2d(1, 16, kernel_size=(1, 2), stride=1, padding='same'),
+            nn.ELU(),
+            nn.Conv2d(16, 16, kernel_size=(1, 2), stride=1, padding='same'),
             nn.ELU(),
             nn.BatchNorm2d(16),
-            nn.MaxPool2d(kernel_size=(4, 1), stride=(4, 1))
+            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1))
         )
 
         # Block 2
         self.block2 = nn.Sequential(
-            nn.Conv2d(16, 32, kernel_size=(1, 4), stride=1, padding='same'),
+            nn.Conv2d(16, 32, kernel_size=(1, 2), stride=1, padding='same'),
+            nn.ELU(),
+            nn.Conv2d(32, 32, kernel_size=(1, 2), stride=1, padding='same'),
             nn.ELU(),
             nn.BatchNorm2d(32),
-            nn.MaxPool2d(kernel_size=(4, 1), stride=(1, 1))
+            nn.MaxPool2d(kernel_size=(2, 1), stride=(2, 1))
         )
 
         # Block 3
         self.block3 = nn.Sequential(
-            nn.Conv2d(32, 32, kernel_size=(2, 1), stride=1, padding='same'),
+            nn.Conv2d(32, 32, kernel_size=(4, 1), stride=1, padding='same'),
+            nn.ELU(),
+            nn.Conv2d(32, 32, kernel_size=(4, 1), stride=1, padding='same'),
             nn.ELU(),
             nn.BatchNorm2d(32),
-            nn.MaxPool2d(kernel_size=(1, 2), stride=(1, 2))
+            nn.MaxPool2d(kernel_size=(1, 4), stride=(1, 4))
         )
 
         # Block 4
         self.block4 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=(4, 1), stride=1, padding='same'),
             nn.ELU(),
+            nn.Conv2d(64, 64, kernel_size=(4, 1), stride=1, padding='same'),
+            nn.ELU(),
             nn.BatchNorm2d(64),
-            nn.MaxPool2d(kernel_size=(1, 2), stride=(1, 2))
+            nn.MaxPool2d(kernel_size=(1, 4), stride=(1, 4))
         )
 
         # Fully Connected layers
-        self.fc1 = nn.Linear(1344, 256)
+        self.fc1 = nn.Linear(4736, 256)
         self.fc2 = nn.Linear(256, 128)
         self.fc3 = nn.Linear(128, 64)
         self.out = nn.Linear(64, 2)
 
     def forward(self, x):
-    #    print(f"Input shape: {x.shape}")  # (B, 1, 24, 30)
+        #print(f"Input shape: {x.shape}")         torch.Size([16, 1, 8, 600])
 
         x = self.block1(x)
-    #    print(f"After Block 1: {x.shape}")
+        #print(f"After Block 1: {x.shape}")       torch.Size([16, 16, 4, 600])
 
         x = self.block2(x)
-    #    print(f"After Block 2: {x.shape}")
+        #print(f"After Block 2: {x.shape}")       torch.Size([16, 32, 2, 600])
 
         x = self.block3(x)
-    #    print(f"After Block 3: {x.shape}")
+        #print(f"After Block 3: {x.shape}")       torch.Size([16, 32, 2, 150])
 
         x = self.block4(x)
-    #    print(f"After Block 4: {x.shape}")
+        #print(f"After Block 4: {x.shape}")       torch.Size([16, 64, 2, 37])
 
         x = x.view(x.size(0), -1)  # Flatten
-    #    print(f"After Flatten: {x.shape}")
+        #print(f"After Flatten: {x.shape}")       torch.Size([16, 4736])
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x_cl = F.relu(self.fc3(x))
@@ -259,7 +267,7 @@ def main():
 
     data_root = Path(r"C:\Users\USER\python_files\test\EEG+fNIRS\02 M2NN\preprocessed_epochs")
     for sub in sub_list:
-        file_path = data_root / sub / "epochs_hbr-epo.fif"
+        file_path = data_root / sub / "epochs_eeg-epo.fif"
         if not file_path.exists():
             print(f"file doesn't exist: {file_path}")
             continue
@@ -273,7 +281,7 @@ def main():
 
         X_train_full, X_test, y_train_full, y_test = train_test_split(X, y, test_size=0.1, stratify=y, random_state=42)
 
-        X_test_win, y_test_win = sliding_window_epochs(X_test, y_test, window_size=30, step_size=10)
+        X_test_win, y_test_win = sliding_window_epochs(X_test, y_test, window_size=600, step_size=200)
         X_test_tensor = torch.tensor(X_test_win, dtype=torch.float32)
         y_test_tensor = torch.tensor(y_test_win, dtype=torch.long)
 
@@ -291,13 +299,13 @@ def main():
         print("9-fold Stratified CV on training set:")
         skf = StratifiedKFold(n_splits=9, shuffle=True, random_state=42)
         for fold, (train_idx, val_idx) in enumerate(skf.split(X_train_full, y_train_full)):
-            print(f"Fold {fold + 1}")
+            print(f"📂 Fold {fold + 1}")
             X_train, X_val = X_train_full[train_idx], X_train_full[val_idx]
             y_train, y_val = y_train_full[train_idx], y_train_full[val_idx]
             print_label_distribution(y_train, name="train")
             print_label_distribution(y_val, name="val")
-            X_train_win, y_train_win = sliding_window_epochs(X_train, y_train, window_size=30, step_size=10)
-            X_val_win, y_val_win = sliding_window_epochs(X_val, y_val, window_size=30, step_size=10)
+            X_train_win, y_train_win = sliding_window_epochs(X_train, y_train, window_size=600, step_size=200)
+            X_val_win, y_val_win = sliding_window_epochs(X_val, y_val, window_size=600, step_size=200)
 
             print(X_train.shape)
             print(X_val.shape)
@@ -317,7 +325,7 @@ def main():
             #X_tr_tensor = X_tr_tensor.permute(0, 2, 1)
             #X_val_tensor = X_val_tensor.permute(0, 2, 1)
 
-            X_tr_tensor = X_tr_tensor.unsqueeze(1)
+            X_tr_tensor = X_tr_tensor.unsqueeze(1)                        # (B, 1, 24, 30)
             X_val_tensor = X_val_tensor.unsqueeze(1)
             # https://github.com/jitalo333/2DCNN-emotion-classifier/blob/main/CNN_classifier.ipynb
 
@@ -328,15 +336,15 @@ def main():
             val_loader = DataLoader(val_dataset, batch_size=16)
 
 
-            HRB_2DCNN = CNN_HBR()
+            EEG_2DCNN = CNN_EEG()
 
-            best_model_state, best_val_acc, train_losses, val_losses, train_accs, val_accs = train_one_fold(HRB_2DCNN, train_loader, val_loader, num_epochs=200, lr=1e-3, patience=35)
+            best_model_state, best_val_acc, train_losses, val_losses, train_accs, val_accs = train_one_fold(EEG_2DCNN, train_loader, val_loader, num_epochs=200, lr=1e-3, patience=35)
 
             plot_train_val_curves(train_losses, val_losses, 'Loss Curve', 'Loss', figures_dir / f'{sub} loss_curve_fold{fold + 1}.png')
             plot_train_val_curves(train_accs, val_accs, 'Accuracy Curve', 'Accuracy', figures_dir / f'{sub} acc_curve_fold{fold + 1}.png')
 
-            HRB_2DCNN.load_state_dict(best_model_state)
-            test_acc= test_model(HRB_2DCNN, test_loader)
+            EEG_2DCNN.load_state_dict(best_model_state)
+            test_acc= test_model(EEG_2DCNN, test_loader)
 
             test_accs.append(test_acc)
 
