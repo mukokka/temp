@@ -147,9 +147,9 @@ def create_mne_events(marker_times, marker_y):
     events = np.column_stack([sample_points, np.zeros(len(sample_points), dtype=int), marker_y])
     return events
 
-NirsMyDataDir = Path(r'C:\Users\USER\python_files\test\EEG+fNIRS\NIRS_01-29')
-EegMyDataDir = Path(r'C:\Users\USER\python_files\test\EEG+fNIRS\EEG_01-29')
-WorkingDir = Path(r'C:\Users\USER\python_files\test\EEG+fNIRS\09 FINALLY')
+NirsMyDataDir = Path(r'xxx')
+EegMyDataDir = Path(r'xxx')
+WorkingDir = Path(r'xxx')
 
 number = 29
 subdir_list = ['subject ' + f'{i:02d}' for i in range(1, number + 1)]
@@ -218,7 +218,6 @@ for subdir in subdir_list:
         raw_selected = channel_selection(raw_ica, MotorChannel_eeg)
         #print('shape of selected eeg',raw_selected.get_data().shape)
         #raw_selected.plot(scalings='auto', title='channel selection', show=True, block=True, duration=5, n_channels=25)
-
         
         epoch_length = int(round((eeg_pre + eeg_post) * fs))
         pre_sample = int(round(eeg_pre * fs))
@@ -242,7 +241,6 @@ for subdir in subdir_list:
             print('b = ', b)
 
             ep = raw_selected.get_data()[:, a:b]     # (n_ch, epoch_length)
-            # 如需基线校正（推荐 [-pre, 0]）
             ep = ep - ep[:, :pre_sample].mean(axis=1, keepdims=True)
             print(ep)
             print(ep.shape)
