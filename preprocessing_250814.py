@@ -39,7 +39,7 @@ def SetMontage(raw, mnt):
     print(pos_3d_eeg.shape)
 
     rmax = np.linalg.norm(pos_3d_eeg, axis=1).max()
-    scale = 0.09 / rmax  # 头半径取 ~9 cm（成人常见）
+    scale = 0.09 / rmax
     pos_m = pos_3d_eeg * scale
 
     ch_pos = {
