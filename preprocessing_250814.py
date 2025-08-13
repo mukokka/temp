@@ -53,8 +53,8 @@ def SetMontage(raw, mnt):
     montage = make_dig_montage(ch_pos=ch_pos, coord_frame='head')
     raw.set_montage(montage)
     '''
-    montage = mne.channels.make_standard_montage('standard_1005')  # 10–5 系统
-    raw.set_montage(montage, on_missing='warn')  # 或者 info.set_montage(montage)
+    montage = mne.channels.make_standard_montage('standard_1005')
+    raw.set_montage(montage, on_missing='warn')
     return raw
 
 def BaselineCorrection(raw):
